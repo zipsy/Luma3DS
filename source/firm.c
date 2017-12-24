@@ -410,6 +410,9 @@ u32 patchNativeFirm(u32 firmVersion, FirmwareSource nandType, bool loadFromStora
     mergeSection0(NATIVE_FIRM, firmVersion, loadFromStorage);
     firm->section[0].size = 0;
 
+    //DeviceID and CTCert patches
+    ret += patchIDCert();
+    
     return ret;
 }
 

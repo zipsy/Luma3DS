@@ -658,3 +658,27 @@ u32 patchAgbBootSplash(u8 *pos, u32 size)
 
     return 0;
 }
+
+u32 patchIDCert()
+{
+    u8 *offDevice = (u8 *)0x01FFB804;
+    u8 *offCert = (u8 *)0x01FFB818;
+    u8 DeviceID[4], CTCert[104];
+    u8 f_size_device = fileRead(&DeviceID, DEVICEID_FILE, sizeof(DeviceID));
+    u8 f_size_cert = fileRead(&CTCert, CTCERT_FILE, sizeof(CTCert));
+    
+    if(f_size_device == 0 || f_size_cert == 0) return 0; //nothing to patch
+    if(f_size_device != sizeof(DeviceID) || f_size_cert != sizeof(CTCert)) return 1; //invalid file(s)
+    
+    int i;
+    for(i = 0; i != sizeof(DeviceID); i++)
+    {
+        offDevice[i] = DeviceID[i];
+    }
+    for(i = 0; i != sizeof(CTCert); i++)
+    {
+        offCert[i] = CTCert[i];
+    }
+    
+    return 0;
+}
