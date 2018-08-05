@@ -1,6 +1,6 @@
 /*
 *   This file is part of Luma3DS
-*   Copyright (C) 2016-2017 Aurora Wright, TuxSH
+*   Copyright (C) 2016-2018 Aurora Wright, TuxSH
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -302,7 +302,7 @@ u32 patchFirmlaunches(u8 *pos, u32 size, u32 process9MemAddr)
     static const u8 pattern[] = {0xE2, 0x20, 0x20, 0x90};
 
     u32 pathLen;
-    for(pathLen = 0; pathLen < 41 && launchedPath[pathLen] != 0; pathLen++);
+    for(pathLen = 0; pathLen < sizeof(launchedPath)/2 && launchedPath[pathLen] != 0; pathLen++);
 
     if(launchedPath[pathLen] != 0) return 1;
 
@@ -454,7 +454,9 @@ u32 patchArm9ExceptionHandlersInstall(u8 *pos, u32 size)
 
     if(temp == NULL) return 1;
 
-    u32 *off = (u32 *)(temp - 0xA);
+    u32 *off;
+
+    for(off = (u32 *)(temp - 2); *off != 0xE5801000; off--); //Until str r1, [r0]
 
     for(u32 r0 = 0x08000000; *off != 0xE3A01040; off++) //Until mov r1, #0x40
     {
@@ -491,20 +493,28 @@ u32 patchSvcBreak9(u8 *pos, u32 size, u32 kernel9Address)
     while(*arm9SvcTable != 0) arm9SvcTable++; //Look for SVC0 (NULL)
 
     u32 *addr = (u32 *)(pos + arm9SvcTable[0x3C] - kernel9Address);
-    *addr = 0xE12FFF7F;
+
+    /*
+        mov r8, sp
+        bkpt 0xffff
+    */
+    addr[0] = 0xE1A0800D;
+    addr[1] = 0xE12FFF7F;
+
+    *(vu32 *)0x01FF8004 = arm9SvcTable[0x3C]; //BreakPtr
 
     return 0;
 }
 
 u32 patchKernel9Panic(u8 *pos, u32 size)
 {
-    static const u8 pattern[] = {0xFF, 0xEA, 0x04, 0xD0};
+    static const u8 pattern[] = {0x00, 0x20, 0x92, 0x15};
 
     u8 *temp = memsearch(pos, pattern, size, sizeof(pattern));
 
     if(temp == NULL) return 1;
 
-    u32 *off = (u32 *)(temp - 0x12);
+    u32 *off = (u32 *)(temp - 0x34);
     *off = 0xE12FFF7E;
 
     return 0;

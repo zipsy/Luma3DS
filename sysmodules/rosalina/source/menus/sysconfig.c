@@ -1,6 +1,6 @@
 /*
 *   This file is part of Luma3DS
-*   Copyright (C) 2016-2017 Aurora Wright, TuxSH
+*   Copyright (C) 2016-2018 Aurora Wright, TuxSH
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -66,9 +66,9 @@ void SysConfigMenu_ToggleLEDs(void)
         {
             mcuHwcInit();
             u8 result;
-            mcuHwcReadRegister(0x28, &result, 1);
+            MCUHWC_ReadRegister(0x28, &result, 1);
             result = ~result;
-            mcuHwcWriteRegister(0x28, &result, 1);
+            MCUHWC_WriteRegister(0x28, &result, 1);
             mcuHwcExit();
         }
         else if(pressed & BUTTON_B)

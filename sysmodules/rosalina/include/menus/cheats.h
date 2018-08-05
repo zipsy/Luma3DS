@@ -24,11 +24,13 @@
 *         reasonable ways as different from the original version.
 */
 
+/* This file was entirely written by Duckbill */
+
 #pragma once
 
-#include "utils.h"
-#include "kernel.h"
-#include "svc.h"
+#include <3ds/types.h>
 
-Result GetSystemInfoHookWrapper(u32 dummy, s32 type, s32 param);
-Result GetSystemInfoHook(s64 *out, s32 type, s32 param);
+#define CHEATS_PER_MENU_PAGE 18
+
+void RosalinaMenu_Cheats(void);
+void Cheat_ApplyKeyCheats();

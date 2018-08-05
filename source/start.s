@@ -1,5 +1,5 @@
 @   This file is part of Luma3DS
-@   Copyright (C) 2016-2017 Aurora Wright, TuxSH
+@   Copyright (C) 2016-2018 Aurora Wright, TuxSH
 @
 @   This program is free software: you can redistribute it and/or modify
 @   it under the terms of the GNU General Public License as published by
@@ -27,9 +27,7 @@
 .global _start
 _start:
     @ Disable interrupts and switch to supervisor mode (also clear flags)
-    mov r4, #0x13
-    orr r4, #0x1C0
-    msr cpsr_cxsf, r4
+    msr cpsr_cxsf, #0xD3
 
     @ Check if r0-r2 are 0 (r0-sp are supposed to be 0), and for regions 0, 5 and 7 of the MPU config
     @ This is not foolproof but should work well enough

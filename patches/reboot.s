@@ -109,16 +109,14 @@ bytes_read: .word 0
 fopen: .ascii "OPEN"
 .pool
 
-.area 82, 0
+.area 2*(80+1), 0
 fname: .ascii "FILE"
 .endarea
 
 .align 4
     kernelcode_start:
 
-    mrs r0, cpsr  ; disable interrupts
-    orr r0, #0xC0
-    msr cpsr, r0
+    msr cpsr_cxsf, #0xD3  ; disable interrupts and clear flags
 
     ldr sp, =copy_launch_stub_stack_top
 

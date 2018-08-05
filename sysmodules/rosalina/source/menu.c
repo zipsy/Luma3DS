@@ -1,6 +1,6 @@
 /*
 *   This file is part of Luma3DS
-*   Copyright (C) 2016-2017 Aurora Wright, TuxSH
+*   Copyright (C) 2016-2018 Aurora Wright, TuxSH
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include "menus.h"
 #include "utils.h"
 #include "menus/n3ds.h"
+#include "menus/cheats.h"
 #include "minisoc.h"
 
 u32 waitInputWithTimeout(u32 msec)
@@ -142,20 +143,35 @@ void menuThreadMain(void)
     if(!isN3DS)
     {
         rosalinaMenu.nbItems--;
-        for(u32 i = 2; i <= rosalinaMenu.nbItems; i++)
+        for(u32 i = 0; i <= rosalinaMenu.nbItems; i++)
             rosalinaMenu.items[i] = rosalinaMenu.items[i+1];
     }
     else
         N3DSMenu_UpdateStatus();
 
+    bool isAcURegistered = false;
+
     while(!terminationRequest)
     {
         if((HID_PAD & menuCombo) == menuCombo)
         {
-            menuEnter();
-            if(isN3DS) N3DSMenu_UpdateStatus();
-            menuShow(&rosalinaMenu);
-            menuLeave();
+            if (!isAcURegistered)
+                isAcURegistered = R_SUCCEEDED(srvIsServiceRegistered(&isAcURegistered, "ac:u"))
+                    && isAcURegistered;
+
+            if (isAcURegistered)
+            {
+                menuEnter();
+                if(isN3DS) N3DSMenu_UpdateStatus();
+                menuShow(&rosalinaMenu);
+                menuLeave();
+            }
+        }
+        else
+        {
+        	if (HID_PAD & 0xFFF) {
+        		Cheat_ApplyKeyCheats();
+        	}
         }
         svcSleepThread(50 * 1000 * 1000LL);
     }
@@ -193,13 +209,16 @@ static void menuDraw(Menu *menu, u32 selected)
     s64 out;
     u32 version, commitHash;
     bool isRelease;
+    bool isMcuHwcRegistered;
 
-    if(R_SUCCEEDED(mcuHwcInit()))
+    if(R_SUCCEEDED(srvIsServiceRegistered(&isMcuHwcRegistered, "mcu::HWC")) && isMcuHwcRegistered && R_SUCCEEDED(mcuHwcInit()))
     {
-        if(R_FAILED(mcuHwcGetBatteryLevel(&batteryLevel)))
+        if(R_FAILED(MCUHWC_GetBatteryLevel(&batteryLevel)))
             batteryLevel = 255;
         mcuHwcExit();
     }
+    else
+        batteryLevel = 255;
 
     svcGetSystemInfo(&out, 0x10000, 0);
     version = (u32)out;

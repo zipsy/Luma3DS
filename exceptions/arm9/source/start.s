@@ -1,5 +1,5 @@
 @   This file is part of Luma3DS
-@   Copyright (C) 2016-2017 Aurora Wright, TuxSH
+@   Copyright (C) 2016-2018 Aurora Wright, TuxSH
 @
 @   This program is free software: you can redistribute it and/or modify
 @   it under the terms of the GNU General Public License as published by
@@ -26,8 +26,12 @@
 .align 4
 .global _start
 _start:
-    add pc, r0, #(handlers - .) @ Dummy instruction to prevent compiler optimizations
+    add pc, r0, #(handlers - .) @ Dummy instruction
 
+.global BreakPtr
+BreakPtr: .word 0
+
+.global handlers
 handlers:
     .word FIQHandler
     .word undefinedInstructionHandler

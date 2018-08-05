@@ -1,6 +1,6 @@
 /*
 *   This file is part of Luma3DS
-*   Copyright (C) 2016-2017 Aurora Wright, TuxSH
+*   Copyright (C) 2016-2018 Aurora Wright, TuxSH
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 #include "fs.h"
 #include "fmt.h"
 #include "font.h"
+#include "config.h"
 
 bool loadSplash(void)
 {
@@ -56,7 +57,9 @@ bool loadSplash(void)
     if(!isTopSplashValid && !isBottomSplashValid) return false;
 
     swapFramebuffers(true);
-    wait(3000ULL);
+
+    u32 durationIndex = MULTICONFIG(SPLASH_DURATION);
+    wait(1000ULL + (durationIndex * 2000ULL));
 
     return true;
 }
