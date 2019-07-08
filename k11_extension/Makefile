@@ -28,17 +28,9 @@ INCLUDES	:=	include include/svc
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 DEFINES :=	-DARM11 -D_3DS
 
-<<<<<<< HEAD
-ARCH    := -mcpu=mpcore -mfpu=vfp
-ASFLAGS := $(ARCH)
-CFLAGS  := -Wall -Wextra -MMD -MP -marm $(ASFLAGS) -I$(dir_include) -fno-builtin -std=c11 -Wno-main -g -O2 -ffast-math \
--mword-relocations -ffunction-sections -fdata-sections
-LDFLAGS := -nostdlib -Wl,--gc-sections,--nmagic $(ARCH)
-=======
 CFLAGS	:=	-g -std=gnu11 -Wall -Wextra -Werror -O2 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections -fdata-sections \
 			-Wno-main $(ARCH) $(DEFINES)
->>>>>>> upstream/master
 
 CFLAGS	+=	$(INCLUDE)
 
