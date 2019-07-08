@@ -5,9 +5,12 @@
 
 **Luma3DS** is a program to patch the system software of (New) Nintendo 3DS handheld consoles "on the fly", adding features (such as per-game language settings and debugging capabilities for developers) and removing restrictions enforced by Nintendo (such as the region lock).
 It also allows you to run unauthorized ("homebrew") content by removing signature checks.
+It will also allows you to replace the specific deviceID and its Certificate with any other.
 To use it, you will need a console capable of running homebrew software on the ARM9 processor. We recommend [Plailect's guide](https://3ds.hacks.guide/) for details on how to get your system ready.
 
 Since Luma3DS v8.0, Luma3DS has its own in-game menu, triggerable by `L+Down+Select` (see the [release notes](https://github.com/AuroraWright/Luma3DS/releases/tag/v8.0)).
+
+
 
 ---
 
@@ -24,6 +27,8 @@ The produced file is called `boot.firm` and is meant to be copied to the root of
 ## Setup / Usage / Features
 
 See https://github.com/AuroraWright/Luma3DS/wiki
+
+Also optional placing **DeviceID.bin** and **CTCert.bin** in luma folder to load it.
 
 ---
 
