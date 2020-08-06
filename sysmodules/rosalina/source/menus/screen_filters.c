@@ -32,121 +32,124 @@
 #include "redshift/redshift.h"
 #include "redshift/colorramp.h"
 
-#define TEMP_DEFAULT NEUTRAL_TEMP
+typedef union {
+    struct {
+        u8 r;
+        u8 g;
+        u8 b;
+        u8 z;
+    };
+    u32 raw;
+} Pixel;
 
-int screenFiltersCurrentTemperature = TEMP_DEFAULT;
+static u16 g_c[0x600];
+static Pixel g_px[0x400];
 
-void writeLut(u32* lut)
+int screenFiltersCurrentTemperature = -1;
+
+static void ScreenFiltersMenu_WriteLut(const Pixel* lut)
 {
     GPU_FB_TOP_COL_LUT_INDEX = 0;
     GPU_FB_BOTTOM_COL_LUT_INDEX = 0;
 
     for (int i = 0; i <= 255; i++) {
-        GPU_FB_TOP_COL_LUT_ELEM = *lut;
-        GPU_FB_BOTTOM_COL_LUT_ELEM = *lut;
+        GPU_FB_TOP_COL_LUT_ELEM = lut->raw;
+        GPU_FB_BOTTOM_COL_LUT_ELEM = lut->raw;
         lut++;
     }
 }
 
-typedef struct {
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 z;
-} Pixel;
-
-void applyColorSettings(color_setting_t* cs)
+static void ScreenFiltersMenu_ApplyColorSettings(color_setting_t* cs)
 {
-    u16 c[0x600];
-    Pixel px[0x400];
     u8 i = 0;
 
-    memset(c, 0, sizeof(c));
-    memset(px, 0, sizeof(px));
+    memset(g_c, 0, sizeof(g_c));
+    memset(g_px, 0, sizeof(g_px));
 
     do {
-        px[i].r = i;
-        px[i].g = i;
-        px[i].b = i;
-        px[i].z = 0;
+        g_px[i].r = i;
+        g_px[i].g = i;
+        g_px[i].b = i;
+        g_px[i].z = 0;
     } while(++i);
 
     do {
-        *(c + i + 0x000) = px[i].r | (px[i].r << 8);
-        *(c + i + 0x100) = px[i].g | (px[i].g << 8);
-        *(c + i + 0x200) = px[i].b | (px[i].b << 8);
+        *(g_c + i + 0x000) = g_px[i].r | (g_px[i].r << 8);
+        *(g_c + i + 0x100) = g_px[i].g | (g_px[i].g << 8);
+        *(g_c + i + 0x200) = g_px[i].b | (g_px[i].b << 8);
     } while(++i);
 
-    colorramp_fill(c + 0x000, c + 0x100, c + 0x200, 0x100, cs);
+    colorramp_fill(g_c + 0x000, g_c + 0x100, g_c + 0x200, 0x100, cs);
 
     do {
-        px[i].r = *(c + i + 0x000) >> 8;
-        px[i].g = *(c + i + 0x100) >> 8;
-        px[i].b = *(c + i + 0x200) >> 8;
+        g_px[i].r = *(g_c + i + 0x000) >> 8;
+        g_px[i].g = *(g_c + i + 0x100) >> 8;
+        g_px[i].b = *(g_c + i + 0x200) >> 8;
     } while(++i);
 
-    writeLut((u32*)px);
+    ScreenFiltersMenu_WriteLut(g_px);
 }
 
-Menu screenFiltersMenu = {
-    "Screen filters menu",
-    .nbItems = 6,
-    {
-        { "Disable", METHOD, .method = &screenFiltersSetDisabled },
-        { "Reduce blue light (level 1)", METHOD, .method = &screenFiltersReduceBlueLevel1 },
-        { "Reduce blue light (level 2)", METHOD, .method = &screenFiltersReduceBlueLevel2 },
-        { "Reduce blue light (level 3)", METHOD, .method = &screenFiltersReduceBlueLevel3 },
-        { "Reduce blue light (level 4)", METHOD, .method = &screenFiltersReduceBlueLevel4 },
-        { "Reduce blue light (level 5)", METHOD, .method = &screenFiltersReduceBlueLevel5 },
-    }
-};
-
-void screenFiltersSetDisabled(void)
-{
-    screenFiltersCurrentTemperature = TEMP_DEFAULT;
-    screenFiltersSetTemperature(screenFiltersCurrentTemperature);
-}
-
-void screenFiltersReduceBlueLevel1(void)
-{
-    screenFiltersCurrentTemperature = 4300;
-    screenFiltersSetTemperature(screenFiltersCurrentTemperature);
-}
-
-void screenFiltersReduceBlueLevel2(void)
-{
-    screenFiltersCurrentTemperature = 3200;
-    screenFiltersSetTemperature(screenFiltersCurrentTemperature);
-}
-
-void screenFiltersReduceBlueLevel3(void)
-{
-    screenFiltersCurrentTemperature = 2100;
-    screenFiltersSetTemperature(screenFiltersCurrentTemperature);
-}
-
-void screenFiltersReduceBlueLevel4(void)
-{
-    screenFiltersCurrentTemperature = 1550;
-    screenFiltersSetTemperature(screenFiltersCurrentTemperature);
-}
-
-void screenFiltersReduceBlueLevel5(void)
-{
-    screenFiltersCurrentTemperature = 1000;
-    screenFiltersSetTemperature(screenFiltersCurrentTemperature);
-}
-
-void screenFiltersSetTemperature(int temperature)
+static void ScreenFiltersMenu_SetCct(int cct)
 {
     color_setting_t cs;
     memset(&cs, 0, sizeof(cs));
 
-    cs.temperature = temperature;
-    cs.gamma[0] = 1.0F;
+    cs.temperature = cct;
+    /*cs.gamma[0] = 1.0F;
     cs.gamma[1] = 1.0F;
     cs.gamma[2] = 1.0F;
-    cs.brightness = 1.0F;
+    cs.brightness = 1.0F;*/
 
-    applyColorSettings(&cs);
+    ScreenFiltersMenu_ApplyColorSettings(&cs);
 }
+
+Menu screenFiltersMenu = {
+    "Screen filters menu",
+    {
+        { "[6500K] Default", METHOD, .method = &ScreenFiltersMenu_SetDefault },
+        { "[10000K] Aquarium", METHOD, .method = &ScreenFiltersMenu_SetAquarium },
+        { "[7500K] Overcast Sky", METHOD, .method = &ScreenFiltersMenu_SetOvercastSky },
+        { "[5500K] Daylight", METHOD, .method = &ScreenFiltersMenu_SetDaylight },
+        { "[4200K] Fluorescent", METHOD, .method = &ScreenFiltersMenu_SetFluorescent },
+        { "[3400K] Halogen", METHOD, .method = &ScreenFiltersMenu_SetHalogen },
+        { "[2700K] Incandescent", METHOD, .method = &ScreenFiltersMenu_SetIncandescent },
+        { "[2300K] Warm Incandescent", METHOD, .method = &ScreenFiltersMenu_SetWarmIncandescent },
+        { "[1900K] Candle", METHOD, .method = &ScreenFiltersMenu_SetCandle },
+        { "[1200K] Ember", METHOD, .method = &ScreenFiltersMenu_SetEmber },
+        {},
+    }
+};
+
+#define DEF_CCT_SETTER(temp, name)\
+void ScreenFiltersMenu_Set##name(void)\
+{\
+    screenFiltersCurrentTemperature = temp;\
+    ScreenFiltersMenu_SetCct(temp);\
+}
+
+void ScreenFiltersMenu_RestoreCct(void)
+{
+    // Not initialized: return
+    if (screenFiltersCurrentTemperature == -1)
+        return;
+
+    // Wait for GSP to restore the CCT table
+    while (GPU_FB_TOP_COL_LUT_ELEM != g_px[0].raw)
+        svcSleepThread(10 * 1000 * 1000LL);
+
+    svcSleepThread(10 * 1000 * 1000LL);
+    ScreenFiltersMenu_WriteLut(g_px);
+}
+
+DEF_CCT_SETTER(6500, Default)
+
+DEF_CCT_SETTER(10000, Aquarium)
+DEF_CCT_SETTER(7500, OvercastSky)
+DEF_CCT_SETTER(5500, Daylight)
+DEF_CCT_SETTER(4200, Fluorescent)
+DEF_CCT_SETTER(3400, Halogen)
+DEF_CCT_SETTER(2700, Incandescent)
+DEF_CCT_SETTER(2300, WarmIncandescent)
+DEF_CCT_SETTER(1900, Candle)
+DEF_CCT_SETTER(1200, Ember)

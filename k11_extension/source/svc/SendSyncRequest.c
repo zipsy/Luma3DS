@@ -1,6 +1,6 @@
 /*
 *   This file is part of Luma3DS
-*   Copyright (C) 2016-2019 Aurora Wright, TuxSH
+*   Copyright (C) 2016-2020 Aurora Wright, TuxSH
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -28,9 +28,16 @@
 #include "svc/SendSyncRequest.h"
 #include "ipc.h"
 
+static inline bool isNdmuWorkaround(const SessionInfo *info, u32 pid)
+{
+    return info != NULL && strcmp(info->name, "ndm:u") == 0 && hasStartedRosalinaNetworkFuncsOnce && pid >= nbSection0Modules;
+}
+
 Result SendSyncRequestHook(Handle handle)
 {
-    KProcessHandleTable *handleTable = handleTableOfProcess(currentCoreContext->objectContext.currentProcess);
+    KProcess *currentProcess = currentCoreContext->objectContext.currentProcess;
+    KProcessHandleTable *handleTable = handleTableOfProcess(currentProcess);
+    u32 pid = idOfProcess(currentProcess);
     KClientSession *clientSession = (KClientSession *)KProcessHandleTable__ToKAutoObject(handleTable, handle);
 
     u32 *cmdbuf = (u32 *)((u8 *)currentCoreContext->objectContext.currentThread->threadLocalStorage + 0x80);
@@ -47,12 +54,7 @@ Result SendSyncRequestHook(Handle handle)
             case 0x10042:
             {
                 SessionInfo *info = SessionInfo_Lookup(clientSession->parentSession);
-                if(info != NULL && kernelVersion >= SYSTEM_VERSION(2, 39, 4) && strcmp(info->name, "srv:pm") == 0)
-                {
-                    res = doPublishToProcessHook(handle, cmdbuf);
-                    skip = true;
-                }
-                else if(info != NULL && strcmp(info->name, "ndm:u") == 0 && hasStartedRosalinaNetworkFuncsOnce)
+                if(isNdmuWorkaround(info, pid))
                 {
                     cmdbuf[0] = 0x10040;
                     cmdbuf[1] = 0;
@@ -92,7 +94,7 @@ Result SendSyncRequestHook(Handle handle)
             case 0x20002:
             {
                 SessionInfo *info = SessionInfo_Lookup(clientSession->parentSession);
-                if(info != NULL && strcmp(info->name, "ndm:u") == 0 && hasStartedRosalinaNetworkFuncsOnce)
+                if(isNdmuWorkaround(info, pid))
                 {
                     cmdbuf[0] = 0x20040;
                     cmdbuf[1] = 0;
@@ -105,7 +107,7 @@ Result SendSyncRequestHook(Handle handle)
             case 0x50100:
             {
                 SessionInfo *info = SessionInfo_Lookup(clientSession->parentSession);
-                if(info != NULL && (strcmp(info->name, "srv:") == 0 || (kernelVersion < SYSTEM_VERSION(2, 39, 4) && strcmp(info->name, "srv:pm") == 0)))
+                if(info != NULL && (strcmp(info->name, "srv:") == 0 || (GET_VERSION_MINOR(kernelVersion) < 39 && strcmp(info->name, "srv:pm") == 0)))
                 {
                     char name[9] = { 0 };
                     memcpy(name, cmdbuf + 1, 8);
@@ -134,7 +136,7 @@ Result SendSyncRequestHook(Handle handle)
                 if(!hasStartedRosalinaNetworkFuncsOnce)
                     break;
                 SessionInfo *info = SessionInfo_Lookup(clientSession->parentSession);
-                skip = info != NULL && strcmp(info->name, "ndm:u") == 0; // SuspendScheduler
+                skip = isNdmuWorkaround(info, pid); // SuspendScheduler
                 if(skip)
                     cmdbuf[1] = 0;
                 break;
@@ -145,24 +147,12 @@ Result SendSyncRequestHook(Handle handle)
                 if(!hasStartedRosalinaNetworkFuncsOnce)
                     break;
                 SessionInfo *info = SessionInfo_Lookup(clientSession->parentSession);
-                if(info != NULL && strcmp(info->name, "ndm:u") == 0) // ResumeScheduler
+                if(isNdmuWorkaround(info, pid)) // ResumeScheduler
                 {
                     cmdbuf[0] = 0x90040;
                     cmdbuf[1] = 0;
                     skip = true;
                 }
-                break;
-            }
-
-            case 0x4010042:
-            {
-                SessionInfo *info = SessionInfo_Lookup(clientSession->parentSession);
-                if(info != NULL && kernelVersion < SYSTEM_VERSION(2, 39, 4) && strcmp(info->name, "srv:pm") == 0)
-                {
-                    res = doPublishToProcessHook(handle, cmdbuf);
-                    skip = true;
-                }
-
                 break;
             }
 

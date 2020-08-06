@@ -1,6 +1,6 @@
 /*
 *   This file is part of Luma3DS
-*   Copyright (C) 2016-2019 Aurora Wright, TuxSH
+*   Copyright (C) 2016-2020 Aurora Wright, TuxSH
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -33,6 +33,8 @@
 #include "fmt.h"
 #include "buttons.h"
 #include "arm9_exception_handlers.h"
+
+// See https://github.com/LumaTeam/luma3ds_exception_dump_parser
 
 void installArm9Handlers(void)
 {
@@ -85,8 +87,8 @@ void detectAndProcessExceptionDumps(void)
 
     drawString(true, 10, 10, COLOR_RED, "An exception occurred");
     u32 posY;
-    if(dumpHeader->processor == 11) posY = drawFormattedString(true, 10, 30, COLOR_WHITE, "Processor:       ARM11 (core %u)", dumpHeader->core);
-    else posY = drawString(true, 10, 30, COLOR_WHITE, "Processor:       ARM9");
+    if(dumpHeader->processor == 11) posY = drawFormattedString(true, 10, 30, COLOR_WHITE, "Processor:       Arm11 (core %u)", dumpHeader->core);
+    else posY = drawString(true, 10, 30, COLOR_WHITE, "Processor:       Arm9");
 
     if(dumpHeader->type == 2)
     {

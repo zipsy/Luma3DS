@@ -1,6 +1,6 @@
 /*
 *   This file is part of Luma3DS
-*   Copyright (C) 2016-2019 Aurora Wright, TuxSH
+*   Copyright (C) 2016-2020 Aurora Wright, TuxSH
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -30,12 +30,18 @@
 
 extern Menu screenFiltersMenu;
 
-int screenFiltersCurrentTemperature;
+extern int screenFiltersCurrentTemperature;
 
-void screenFiltersSetDisabled(void);
-void screenFiltersReduceBlueLevel1(void);
-void screenFiltersReduceBlueLevel2(void);
-void screenFiltersReduceBlueLevel3(void);
-void screenFiltersReduceBlueLevel4(void);
-void screenFiltersReduceBlueLevel5(void);
-void screenFiltersSetTemperature(int temperature);
+void ScreenFiltersMenu_RestoreCct(void);
+
+void ScreenFiltersMenu_SetDefault(void);            // 6500K (default)
+
+void ScreenFiltersMenu_SetAquarium(void);           // 10000K
+void ScreenFiltersMenu_SetOvercastSky(void);        // 7500K
+void ScreenFiltersMenu_SetDaylight(void);           // 5500K
+void ScreenFiltersMenu_SetFluorescent(void);        // 4200K
+void ScreenFiltersMenu_SetHalogen(void);            // 3400K
+void ScreenFiltersMenu_SetIncandescent(void);       // 2700K
+void ScreenFiltersMenu_SetWarmIncandescent(void);   // 2300K
+void ScreenFiltersMenu_SetCandle(void);             // 1900K
+void ScreenFiltersMenu_SetEmber(void);              // 1200K
