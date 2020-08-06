@@ -25,6 +25,7 @@ Since v8.0, Luma3DS has its own in-game menu, triggerable by <kbd>L+Down+Select<
 #
 ### Setup / Usage / Features
 See https://github.com/LumaTeam/Luma3DS/wiki
+
 Also optional placing **DeviceID.bin** and **CTCert.bin** in luma folder to load it.
 
 #
